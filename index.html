@@ -142,6 +142,8 @@
             <div class="field cotton-only"><label for="pattern">ประเภทลาย</label><select id="pattern"><option>สีพื้น</option><option>ลายริ้ว</option><option>ลายสก็อต</option><option>คละสี/ลาย</option></select></div>
             <div class="field cotton-only"><label for="shipping">การจัดส่ง</label><select id="shipping"><option value="standard">จัดส่งมาตรฐาน — คำนวณอัตโนมัติ</option><option value="pickup">รับสินค้าเอง — ฟรี</option></select></div>
             <div class="field"><label for="customer">ชื่อลูกค้า / ร้านค้า</label><input id="customer" type="text" placeholder="ระบุชื่อสำหรับใบเสนอราคา"></div>
+            <div class="field"><label for="customer-phone">เบอร์โทรศัพท์ลูกค้า (ถ้ามี)</label><input id="customer-phone" type="tel" placeholder="เช่น 08X-XXX-XXXX"></div>
+            <div class="field full"><label for="customer-address">ที่อยู่ลูกค้า (ถ้ามี)</label><input id="customer-address" type="text" placeholder="ระบุที่อยู่สำหรับแสดงในใบเสนอราคา"></div>
             <div class="form-note" id="form-note">ค่าจัดส่งคำนวณตามจำนวนหลา: เริ่มต้น 40 บาท และเมื่อเกิน 80 หลา เพิ่มทุก 10 หลาอีก 10 บาท</div>
           </form>
           <aside class="summary-card">
@@ -153,7 +155,64 @@
       </div>
     </section>
 
-    <section class="contact-section" id="contact"><div class="container contact-grid"><div><p class="eyebrow light">Talk to us</p><h2>ให้เราช่วยเลือกผ้า<br>ที่เหมาะกับงานของคุณ</h2></div><div class="contact-list"><a href="tel:0968875517"><span>โทรศัพท์ / LINE</span><strong>096-887-5517</strong></a><a href="mailto:incxprint@gmail.com"><span>อีเมล</span><strong>incxprint@gmail.com</strong></a><a href="https://www.facebook.com/XiaoHaSeng/" target="_blank" rel="noopener"><span>Facebook</span><strong>ขายผ้าพับ ผ้าหลา ผ้าม้วน ราคาส่ง ↗</strong></a><div><span>ที่อยู่</span><strong>115/12 หมู่ 1 ตำบลแคราย อำเภอกระทุ่มแบน จังหวัดสมุทรสาคร 74110</strong></div></div></div></section>
+    <section class="print-quotation print-only" id="print-quotation" aria-hidden="true">
+      <div class="quotation-accent"></div>
+      <header class="quotation-header">
+        <div class="quotation-title-wrap">
+          <img src="assets/logo.jpg" alt="XHX SHOP">
+          <div><p class="quotation-kicker">XHX SHOP</p><h1>ใบเสนอราคา</h1><span>QUOTATION</span></div>
+        </div>
+        <div class="quotation-meta">
+          <div><span>เลขที่ใบเสนอราคา</span><strong id="quote-number">XHX-000000</strong></div>
+          <div><span>วันที่</span><strong id="quote-date">-</strong></div>
+          <div><span>ยืนราคาถึงวันที่</span><strong id="quote-valid-date">-</strong></div>
+        </div>
+      </header>
+
+      <div class="quotation-parties">
+        <section>
+          <h2>ข้อมูลผู้เสนอราคา</h2>
+          <strong>XHX SHOP</strong>
+          <p>115/12 หมู่ 1 ตำบลแคราย อำเภอกระทุ่มแบน<br>จังหวัดสมุทรสาคร 74110</p>
+          <p>โทรศัพท์ / LINE: 096-887-5517<br>อีเมล: incxprint@gmail.com</p>
+        </section>
+        <section>
+          <h2>ข้อมูลลูกค้า</h2>
+          <dl>
+            <div><dt>ชื่อลูกค้า</dt><dd id="quote-customer">ลูกค้าทั่วไป</dd></div>
+            <div><dt>เบอร์โทรศัพท์</dt><dd id="quote-customer-phone">-</dd></div>
+            <div><dt>ที่อยู่</dt><dd id="quote-customer-address">-</dd></div>
+          </dl>
+        </section>
+      </div>
+
+      <table class="quotation-table">
+        <thead><tr><th>ลำดับ</th><th>รายการสินค้า / บริการ</th><th>จำนวน</th><th>ราคา/หน่วย</th><th>ราคารวม</th></tr></thead>
+        <tbody id="quote-items"></tbody>
+      </table>
+
+      <div class="quotation-totals">
+        <div class="quotation-notes">
+          <h2>หมายเหตุ</h2>
+          <p id="quote-note">ราคานี้เป็นราคาเบื้องต้น กรุณารอเจ้าหน้าที่ยืนยันรายละเอียดก่อนเริ่มผลิต</p>
+          <p>ใบเสนอราคานี้ไม่ใช่ใบกำกับภาษี และยอดข้างต้นยังไม่รวมภาษี (ถ้ามี)</p>
+        </div>
+        <dl>
+          <div><dt>รวมเป็นเงิน</dt><dd id="quote-subtotal">0.00 บาท</dd></div>
+          <div><dt>ค่าจัดส่ง</dt><dd id="quote-shipping">0.00 บาท</dd></div>
+          <div class="quotation-grand"><dt>ยอดรวมทั้งสิ้น</dt><dd id="quote-grand-total">0.00 บาท</dd></div>
+        </dl>
+      </div>
+
+      <div class="quotation-amount-text">จำนวนเงินรวม: <strong id="quote-amount-text">-</strong></div>
+
+      <footer class="quotation-footer">
+        <div class="quotation-contact"><img src="assets/line-qr.jpg" alt="QR Code LINE XHX SHOP"><div><h2>ช่องทางการติดต่อ</h2><p>โทรศัพท์ / LINE: 096-887-5517<br>Facebook: ขายผ้าพับ ผ้าหลา ผ้าม้วน ราคาส่ง</p></div></div>
+        <div class="signature"><span>ผู้เสนอราคา</span><strong>XHX SHOP</strong><small>วันที่ <span id="quote-sign-date">-</span></small></div>
+      </footer>
+    </section>
+
+    <section class="contact-section" id="contact"><div class="container contact-grid"><div><p class="eyebrow light">Talk to us</p><h2>ให้เราช่วยเลือกผ้า<br>ที่เหมาะกับงานของคุณ</h2><div class="contact-qr"><img src="assets/line-qr.jpg" alt="สแกน QR Code เพื่อเพิ่ม LINE XHX SHOP"><span><b>สแกนเพื่อเพิ่ม LINE</b><small>สอบถามราคาและสั่งงานได้ทันที</small></span></div></div><div class="contact-list"><a href="tel:0968875517"><span>โทรศัพท์ / LINE</span><strong>096-887-5517</strong></a><a href="mailto:incxprint@gmail.com"><span>อีเมล</span><strong>incxprint@gmail.com</strong></a><a href="https://www.facebook.com/XiaoHaSeng/" target="_blank" rel="noopener"><span>Facebook</span><strong>ขายผ้าพับ ผ้าหลา ผ้าม้วน ราคาส่ง ↗</strong></a><div><span>ที่อยู่</span><strong>115/12 หมู่ 1 ตำบลแคราย อำเภอกระทุ่มแบน จังหวัดสมุทรสาคร 74110</strong></div></div></div></section>
   </main>
   <footer><div class="container"><div class="footer-brand"><img src="assets/logo.jpg" alt=""><b>XHX SHOP</b></div><p>© <span id="year"></span> XHX SHOP · ผ้าพับ ผ้าหลา ผ้าม้วน ราคาส่ง</p></div></footer>
   <script src="app.js"></script>

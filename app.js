@@ -123,9 +123,115 @@ document.querySelectorAll('[data-quick-product]').forEach(button=>button.addEven
   document.querySelector('#calculator').scrollIntoView({behavior:'smooth',block:'start'});
   setTimeout(()=>quantity.focus({preventScroll:true}),500);
 }));
+const quoteNumber = value => new Intl.NumberFormat('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(value)+' บาท';
+const quoteDate = date => new Intl.DateTimeFormat('th-TH',{day:'numeric',month:'long',year:'numeric'}).format(date);
+
+function thaiBahtText(amount){
+  const numberWords=['ศูนย์','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
+  const positionWords=['','สิบ','ร้อย','พัน','หมื่น','แสน'];
+  const readSixDigits=value=>{
+    const digits=String(value);
+    let result='';
+    for(let index=0;index<digits.length;index++){
+      const digit=Number(digits[index]);
+      const position=digits.length-index-1;
+      if(!digit) continue;
+      if(position===1 && digit===1) result+='สิบ';
+      else if(position===1 && digit===2) result+='ยี่สิบ';
+      else if(position===0 && digit===1 && digits.length>1) result+='เอ็ด';
+      else result+=numberWords[digit]+positionWords[position];
+    }
+    return result;
+  };
+  const readInteger=value=>{
+    if(value===0) return numberWords[0];
+    if(value>=1000000){
+      const millions=Math.floor(value/1000000);
+      const remainder=value%1000000;
+      return readInteger(millions)+'ล้าน'+(remainder?readSixDigits(remainder):'');
+    }
+    return readSixDigits(value);
+  };
+  const rounded=Math.round(Number(amount)*100)/100;
+  const baht=Math.floor(rounded);
+  const satang=Math.round((rounded-baht)*100);
+  return readInteger(baht)+'บาท'+(satang?readSixDigits(satang)+'สตางค์':'ถ้วน');
+}
+
+function buildQuotation(){
+  const qty=Math.max(1,Number(quantity.value)||1);
+  const isCotton=product.value==='cotton';
+  const isPoly=product.value==='sublimation';
+  const rows=[];
+  let subtotal=0;
+  let shippingFee=0;
+  let shippingText='ติดต่อเจ้าหน้าที่';
+  let note='ราคานี้เป็นราคาเบื้องต้น กรุณารอเจ้าหน้าที่ยืนยันรายละเอียดและไฟล์งานก่อนเริ่มผลิต';
+
+  if(isCotton){
+    const isRoll=document.querySelector('input[name="orderType"]:checked').value==='roll';
+    const rate=isRoll?50:qty>=100?55:qty>=50?60:qty>=10?75:80;
+    const total=qty*rate;
+    rows.push({name:`Cotton Oxford หน้ากว้าง 45 นิ้ว - ${pattern.value}${isRoll?' (ยกม้วน)':''}`,qty:`${qty.toLocaleString('th-TH')} หลา`,rate,total});
+    subtotal=total;
+    shippingFee=shipping.value==='pickup'?0:calculateCottonShipping(qty);
+    shippingText=shipping.value==='pickup'?'รับสินค้าเอง - ฟรี':quoteNumber(shippingFee);
+    note='ผ้า Cotton Oxford สามารถคละสีและลายได้สำหรับออเดอร์ปลีก ยกเว้นการสั่งยกม้วน กรุณารอทางร้านยืนยันสต๊อก';
+  }else if(isPoly){
+    const printRate=qty>=150?23:qty>=100?40:qty>=20?50:qty>=10?60:100;
+    const printing=qty*printRate;
+    const usesStoreFabric=supplyMode.value!=='customer';
+    if(usesStoreFabric){
+      const fabricRate=Number(polyFabric.value);
+      const fabricName=polyFabric.options[polyFabric.selectedIndex].text.split(' — ')[0];
+      const fabricTotal=qty*fabricRate;
+      rows.push({name:`${fabricName} หน้ากว้าง 58-60 นิ้ว`,qty:`${qty.toLocaleString('th-TH')} หลา`,rate:fabricRate,total:fabricTotal});
+      subtotal+=fabricTotal;
+    }
+    rows.push({name:`ค่าพิมพ์ผ้าโพลี Sublimation${supplyMode.value==='customer'?' (ลูกค้านำผ้ามาเอง)':''}`,qty:`${qty.toLocaleString('th-TH')} หลา`,rate:printRate,total:printing});
+    subtotal+=printing;
+    if(supplyMode.value==='block'){
+      const length=Math.max(1,Number(blockLength.value)||1);
+      const percent=getBlockPercent(length);
+      const charge=subtotal*percent;
+      rows.push({name:`ค่างานบล็อก ความยาว ${length.toLocaleString('th-TH')} ซม. (+${Math.round(percent*100)}%)`,qty:'1 งาน',rate:null,total:charge});
+      subtotal+=charge;
+    }
+    note='ราคาพิมพ์คิดต่อไฟล์และต่อหลา งานบล็อกวัดจากความยาวผ้า ค่าจัดส่งกรุณาติดต่อเจ้าหน้าที่';
+  }else{
+    const rate=qty>=100?60:qty>=50?70:qty>=20?80:qty>=10?100:140;
+    const total=qty*rate;
+    rows.push({name:'ปริ้นฟิล์ม DTF ขนาด 58 x 100 ซม.',qty:`${qty.toLocaleString('th-TH')} เมตร`,rate,total});
+    subtotal=total;
+    note='ค่าจัดส่งงานปริ้นฟิล์ม DTF กรุณาติดต่อเจ้าหน้าที่ และโปรดตรวจสอบไฟล์งานก่อนเริ่มผลิต';
+  }
+
+  const today=new Date();
+  const validDate=new Date(today);
+  validDate.setDate(validDate.getDate()+7);
+  const pad=value=>String(value).padStart(2,'0');
+  const quoteId=`XHX-${today.getFullYear()}${pad(today.getMonth()+1)}${pad(today.getDate())}-${pad(today.getHours())}${pad(today.getMinutes())}`;
+  const grandTotal=subtotal+shippingFee;
+  document.querySelector('#quote-number').textContent=quoteId;
+  document.querySelector('#quote-date').textContent=quoteDate(today);
+  document.querySelector('#quote-valid-date').textContent=quoteDate(validDate);
+  document.querySelector('#quote-sign-date').textContent=quoteDate(today);
+  document.querySelector('#quote-customer').textContent=document.querySelector('#customer').value.trim()||'ลูกค้าทั่วไป';
+  document.querySelector('#quote-customer-phone').textContent=document.querySelector('#customer-phone').value.trim()||'-';
+  document.querySelector('#quote-customer-address').textContent=document.querySelector('#customer-address').value.trim()||'-';
+  document.querySelector('#quote-items').innerHTML=rows.map((row,index)=>`<tr><td>${index+1}</td><td>${row.name}</td><td>${row.qty}</td><td>${row.rate===null?'-':quoteNumber(row.rate)}</td><td>${quoteNumber(row.total)}</td></tr>`).join('');
+  document.querySelector('#quote-subtotal').textContent=quoteNumber(subtotal);
+  document.querySelector('#quote-shipping').textContent=shippingText;
+  document.querySelector('#quote-grand-total').textContent=quoteNumber(grandTotal);
+  document.querySelector('#quote-amount-text').textContent=thaiBahtText(grandTotal);
+  document.querySelector('#quote-note').textContent=note;
+  return quoteId;
+}
+
 document.querySelector('#download-quote').addEventListener('click',()=>{
   const customer=document.querySelector('#customer').value.trim();
-  document.title=customer?`ใบเสนอราคา XHX SHOP - ${customer}`:'ใบเสนอราคา XHX SHOP';
+  const quoteId=buildQuotation();
+  document.title=customer?`ใบเสนอราคา ${quoteId} - ${customer}`:`ใบเสนอราคา ${quoteId} - XHX SHOP`;
   window.print();
 });
 document.querySelector('.menu-button').addEventListener('click',e=>{const links=document.querySelector('.nav-links');links.classList.toggle('open');e.currentTarget.setAttribute('aria-expanded',links.classList.contains('open'))});
