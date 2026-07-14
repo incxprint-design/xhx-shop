@@ -379,3 +379,42 @@ document.querySelectorAll('.sample-image').forEach(card=>card.addEventListener('
 imageDialog.querySelector('button').addEventListener('click',()=>imageDialog.close());
 imageDialog.addEventListener('click',event=>{if(event.target===imageDialog)imageDialog.close()});
 calculate();
+
+const scrollProgress=document.createElement('div');
+scrollProgress.id='scroll-progress';
+scrollProgress.setAttribute('aria-hidden','true');
+document.body.appendChild(scrollProgress);
+const updateScrollProgress=()=>{
+  const available=document.documentElement.scrollHeight-window.innerHeight;
+  scrollProgress.style.width=`${available>0?Math.min(100,(window.scrollY/available)*100):0}%`;
+};
+window.addEventListener('scroll',updateScrollProgress,{passive:true});
+updateScrollProgress();
+
+const revealTargets=document.querySelectorAll('.section-heading,.split>*,.quick-card,.service-steps article,.mini-table,.pattern-info article,.before-after-card,.dtf-media>*,.calculator-grid>*');
+if('IntersectionObserver' in window&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+  const revealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
+    if(entry.isIntersecting){entry.target.classList.add('is-visible');revealObserver.unobserve(entry.target)}
+  }),{threshold:.08,rootMargin:'0px 0px -45px'});
+  revealTargets.forEach((element,index)=>{element.classList.add('reveal-ready');element.style.transitionDelay=`${Math.min(index%3,2)*70}ms`;revealObserver.observe(element)});
+}
+
+const navAnchors=[...document.querySelectorAll('.nav-links a[href^="#"]')];
+const observedSections=navAnchors.map(anchor=>document.querySelector(anchor.getAttribute('href'))).filter(Boolean);
+if('IntersectionObserver' in window){
+  const navObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
+    if(entry.isIntersecting){navAnchors.forEach(anchor=>anchor.classList.toggle('active',anchor.getAttribute('href')===`#${entry.target.id}`))}
+  }),{rootMargin:'-30% 0px -60% 0px',threshold:0});
+  observedSections.forEach(section=>navObserver.observe(section));
+}
+
+const heroVisual=document.querySelector('.hero-visual');
+if(heroVisual&&window.matchMedia('(pointer:fine)').matches){
+  heroVisual.addEventListener('pointermove',event=>{
+    const bounds=heroVisual.getBoundingClientRect();
+    const x=((event.clientX-bounds.left)/bounds.width-.5)*8;
+    const y=((event.clientY-bounds.top)/bounds.height-.5)*8;
+    heroVisual.style.transform=`translate(${x}px,${y}px)`;
+  });
+  heroVisual.addEventListener('pointerleave',()=>{heroVisual.style.transform='translate(0,0)'});
+}
