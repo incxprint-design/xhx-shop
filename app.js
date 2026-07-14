@@ -252,7 +252,13 @@ function drawQuotePdfCanvas(data,logoImage,qrImage){
   ctx.fillStyle=blue;ctx.fillRect(0,0,38,1260);ctx.fillStyle=pink;ctx.fillRect(0,1260,38,494);
   [1510,1570,1630].forEach(y=>{ctx.beginPath();ctx.arc(19,y,8,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill()});
   const font=(size,weight=400)=>`${weight} ${size}px Tahoma, "Noto Sans Thai", sans-serif`;
-  const text=(value,x,y,size=24,weight=400,color=ink,align='left')=>{ctx.font=font(size,weight);ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='alphabetic';ctx.fillText(String(value),x,y)};
+  const text=(value,x,y,size=24,weight=400,color=ink,align='left')=>{
+    const content=String(value);
+    ctx.font=font(size,weight);ctx.fillStyle=color;ctx.textAlign='left';ctx.textBaseline='alphabetic';
+    const measuredWidth=ctx.measureText(content).width;
+    const safeX=align==='right'?x-measuredWidth:align==='center'?x-measuredWidth/2:x;
+    ctx.fillText(content,safeX,y);
+  };
   const rule=(x1,y1,x2,y2,color=line,width=2)=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke()};
   const wrap=(value,x,y,maxWidth,lineHeight,size=22,weight=400,color=muted,maxLines=3)=>{
     ctx.font=font(size,weight);ctx.fillStyle=color;ctx.textAlign='left';ctx.textBaseline='alphabetic';
