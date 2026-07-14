@@ -14,10 +14,11 @@
   <header class="nav-wrap">
     <nav class="nav container">
       <a class="brand" href="#top" aria-label="XHX SHOP หน้าแรก"><img src="assets/logo.jpg" alt="โลโก้ XHX SHOP"><span>XHX SHOP</span></a>
-      <button class="menu-button" aria-label="เปิดเมนู" aria-expanded="false">☰</button>
       <div class="nav-links">
         <a href="#fabric">ผ้าของเรา</a><a href="#patterns">สีและลาย</a><a href="#sublimation">พิมพ์ผ้าโพลี</a><a href="#dtf">ปริ้นฟิล์ม DTF</a><a href="#calculator">คำนวณราคา</a><a href="#contact">ติดต่อ</a>
       </div>
+      <button class="language-toggle" id="language-toggle" type="button" aria-label="Switch to English" aria-pressed="false"><span>EN</span></button>
+      <button class="menu-button" aria-label="เปิดเมนู" aria-expanded="false">☰</button>
       <a class="button small nav-cta" href="#calculator">คำนวณราคา</a>
     </nav>
   </header>
@@ -138,7 +139,7 @@
             <div class="field full poly-only store-fabric-field hidden"><label for="poly-fabric">เลือกผ้าโพลีของร้าน (หน้ากว้าง 58–60 นิ้ว)</label><select id="poly-fabric"><option value="20">ผ้าไหมอิตาลี 120g — 20 บาท/หลา</option><option value="16">ผ้าไฮเกรด — 16 บาท/หลา</option><option value="23">ผ้าชีฟองทราย — 23 บาท/หลา</option><option value="24">ผ้าโฟร์เวย์ — 24 บาท/หลา</option><option value="25">ผ้าไมโครเรียบ 145G — 25 บาท/หลา</option><option value="26">ผ้าซาร่า — 26 บาท/หลา</option><option value="28">ผ้าสลาฟ — 28 บาท/หลา</option><option value="32">ผ้าร่อง — 32 บาท/หลา</option><option value="42">ผ้าซาตินไดมอน — 42 บาท/หลา</option><option value="45">ผ้าเปเป้/บอนนี่ — 45 บาท/หลา</option><option value="49">ผ้า ITY — 49 บาท/หลา</option><option value="55">ผ้าโซล่อน — 55 บาท/หลา</option></select></div>
             <div class="field full poly-only block-field hidden"><label for="block-length">ความยาวผ้าที่ใช้ทำบล็อก (ซม.)</label><input id="block-length" type="number" min="1" value="100" placeholder="เช่น 150"></div>
             <div class="field"><label for="quantity" id="quantity-label">จำนวน (หลา)</label><input id="quantity" type="number" min="1" value="10" required></div>
-            <div class="field cotton-only"><label for="pattern">ประเภทลาย</label><select id="pattern"><option>สีพื้น</option><option>ลายริ้ว</option><option>ลายสก็อต</option><option>คละสี/ลาย</option></select></div>
+            <div class="field cotton-only"><label for="pattern">ประเภทลาย</label><select id="pattern"><option value="solid">สีพื้น</option><option value="stripe">ลายริ้ว</option><option value="check">ลายสก็อต</option><option value="mixed">คละสี/ลาย</option></select></div>
             <div class="field cotton-only"><label for="shipping">การจัดส่ง</label><select id="shipping"><option value="standard">จัดส่งมาตรฐาน — คำนวณอัตโนมัติ</option><option value="pickup">รับสินค้าเอง — ฟรี</option></select></div>
             <div class="field"><label for="customer">ชื่อลูกค้า / ร้านค้า</label><input id="customer" type="text" placeholder="ระบุชื่อสำหรับใบเสนอราคา"></div>
             <div class="field"><label for="customer-phone">เบอร์โทรศัพท์ลูกค้า (ถ้ามี)</label><input id="customer-phone" type="tel" placeholder="เช่น 08X-XXX-XXXX"></div>
