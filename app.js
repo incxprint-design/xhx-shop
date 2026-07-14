@@ -216,23 +216,101 @@ function buildQuotation(){
   document.querySelector('#quote-date').textContent=quoteDate(today);
   document.querySelector('#quote-valid-date').textContent=quoteDate(validDate);
   document.querySelector('#quote-sign-date').textContent=quoteDate(today);
-  document.querySelector('#quote-customer').textContent=document.querySelector('#customer').value.trim()||'ลูกค้าทั่วไป';
-  document.querySelector('#quote-customer-phone').textContent=document.querySelector('#customer-phone').value.trim()||'-';
-  document.querySelector('#quote-customer-address').textContent=document.querySelector('#customer-address').value.trim()||'-';
+  const customerName=document.querySelector('#customer').value.trim()||'ลูกค้าทั่วไป';
+  const customerPhone=document.querySelector('#customer-phone').value.trim()||'-';
+  const customerAddress=document.querySelector('#customer-address').value.trim()||'-';
+  document.querySelector('#quote-customer').textContent=customerName;
+  document.querySelector('#quote-customer-phone').textContent=customerPhone;
+  document.querySelector('#quote-customer-address').textContent=customerAddress;
   document.querySelector('#quote-items').innerHTML=rows.map((row,index)=>`<tr><td>${index+1}</td><td>${row.name}</td><td>${row.qty}</td><td>${row.rate===null?'-':quoteNumber(row.rate)}</td><td>${quoteNumber(row.total)}</td></tr>`).join('');
   document.querySelector('#quote-subtotal').textContent=quoteNumber(subtotal);
   document.querySelector('#quote-shipping').textContent=shippingText;
   document.querySelector('#quote-grand-total').textContent=quoteNumber(grandTotal);
   document.querySelector('#quote-amount-text').textContent=thaiBahtText(grandTotal);
   document.querySelector('#quote-note').textContent=note;
-  return quoteId;
+  return {quoteId,today,validDate,rows,subtotal,shippingFee,shippingText,grandTotal,note,customerName,customerPhone,customerAddress};
 }
 
-document.querySelector('#download-quote').addEventListener('click',()=>{
-  const customer=document.querySelector('#customer').value.trim();
-  const quoteId=buildQuotation();
-  document.title=customer?`ใบเสนอราคา ${quoteId} - ${customer}`:`ใบเสนอราคา ${quoteId} - XHX SHOP`;
-  window.print();
+const loadQuoteImage=src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=reject;image.src=src});
+
+function drawQuoteImage(context,image,x,y,width,height){
+  const scale=Math.max(width/image.width,height/image.height);
+  const sourceWidth=width/scale;
+  const sourceHeight=height/scale;
+  context.save();
+  context.beginPath();context.rect(x,y,width,height);context.clip();
+  context.drawImage(image,(image.width-sourceWidth)/2,(image.height-sourceHeight)/2,sourceWidth,sourceHeight,x,y,width,height);
+  context.restore();
+}
+
+function drawQuotePdfCanvas(data,logoImage,qrImage){
+  const canvas=document.createElement('canvas');
+  canvas.width=1240;canvas.height=1754;
+  const ctx=canvas.getContext('2d');
+  const blue='#526f94',pink='#d47a86',ink='#24364f',muted='#667085',line='#d9e0e8',pale='#eef3f8';
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle=blue;ctx.fillRect(0,0,38,1260);ctx.fillStyle=pink;ctx.fillRect(0,1260,38,494);
+  [1510,1570,1630].forEach(y=>{ctx.beginPath();ctx.arc(19,y,8,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill()});
+  const font=(size,weight=400)=>`${weight} ${size}px Tahoma, "Noto Sans Thai", sans-serif`;
+  const text=(value,x,y,size=24,weight=400,color=ink,align='left')=>{ctx.font=font(size,weight);ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='alphabetic';ctx.fillText(String(value),x,y)};
+  const rule=(x1,y1,x2,y2,color=line,width=2)=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke()};
+  const wrap=(value,x,y,maxWidth,lineHeight,size=22,weight=400,color=muted,maxLines=3)=>{
+    ctx.font=font(size,weight);ctx.fillStyle=color;ctx.textAlign='left';ctx.textBaseline='alphabetic';
+    const chars=Array.from(String(value));let lineText='',lines=[];
+    chars.forEach(char=>{const trial=lineText+char;if(ctx.measureText(trial).width>maxWidth&&lineText){lines.push(lineText);lineText=char}else lineText=trial});
+    if(lineText)lines.push(lineText);
+    lines.slice(0,maxLines).forEach((lineValue,index)=>ctx.fillText(index===maxLines-1&&lines.length>maxLines?lineValue.slice(0,-1)+'…':lineValue,x,y+index*lineHeight));
+    return Math.min(lines.length,maxLines)*lineHeight;
+  };
+
+  ctx.save();ctx.beginPath();ctx.arc(145,115,62,0,Math.PI*2);ctx.clip();drawQuoteImage(ctx,logoImage,83,53,124,124);ctx.restore();
+  text('XHX SHOP',230,78,19,700,muted);text('ใบเสนอราคา',230,142,54,700,blue);text('QUOTATION',232,184,20,700,pink);
+  const metaX=845;[['เลขที่ใบเสนอราคา',data.quoteId],['วันที่',quoteDate(data.today)],['ยืนราคาถึงวันที่',quoteDate(data.validDate)]].forEach(([label,value],index)=>{const y=75+index*47;text(label,metaX,y,18,400,muted);text(value,1160,y,19,700,ink,'right');rule(metaX,y+15,1160,y+15)});
+  rule(85,225,1160,225,blue,6);
+
+  text('ข้อมูลผู้เสนอราคา',85,282,22,700,blue);rule(85,300,565,300,blue,2);text('XHX SHOP',85,345,23,700,ink);wrap('115/12 หมู่ 1 ตำบลแคราย อำเภอกระทุ่มแบน จังหวัดสมุทรสาคร 74110',85,382,460,29,19,400,muted,3);text('โทรศัพท์ / LINE: 096-887-5517',85,466,19,400,muted);text('อีเมล: incxprint@gmail.com',85,495,19,400,muted);
+  text('ข้อมูลลูกค้า',665,282,22,700,blue);rule(665,300,1160,300,blue,2);
+  [['ชื่อลูกค้า',data.customerName],['เบอร์โทรศัพท์',data.customerPhone],['ที่อยู่',data.customerAddress]].forEach(([label,value],index)=>{const y=345+index*54;text(label,665,y,18,400,muted);wrap(value,815,y,330,27,19,700,ink,index===2?2:1)});
+
+  let tableY=555;ctx.fillStyle=blue;ctx.fillRect(85,tableY,1075,58);text('ลำดับ',112,592,18,700,'#fff');text('รายการสินค้า / บริการ',190,592,18,700,'#fff');text('จำนวน',785,592,18,700,'#fff','right');text('ราคา/หน่วย',985,592,18,700,'#fff','right');text('ราคารวม',1145,592,18,700,'#fff','right');
+  tableY+=58;data.rows.forEach((row,index)=>{const rowHeight=72;if(index%2){ctx.fillStyle='#f6f8fb';ctx.fillRect(85,tableY,1075,rowHeight)}text(index+1,130,tableY+43,19,400,ink,'center');wrap(row.name,190,tableY+35,470,26,18,400,ink,2);text(row.qty,785,tableY+43,18,400,ink,'right');text(row.rate===null?'-':quoteNumber(row.rate),985,tableY+43,18,400,ink,'right');text(quoteNumber(row.total),1145,tableY+43,18,400,ink,'right');rule(85,tableY+rowHeight,1160,tableY+rowHeight);tableY+=rowHeight});
+
+  const totalsY=tableY+54;text('หมายเหตุ',85,totalsY,21,700,blue);rule(85,totalsY+17,645,totalsY+17,blue,2);wrap(data.note,85,totalsY+53,540,28,18,400,muted,3);wrap('ใบเสนอราคานี้ไม่ใช่ใบกำกับภาษี และยอดข้างต้นยังไม่รวมภาษี (ถ้ามี)',85,totalsY+145,540,27,17,400,muted,2);
+  const totalX=700;[['รวมเป็นเงิน',quoteNumber(data.subtotal)],['ค่าจัดส่ง',data.shippingText]].forEach(([label,value],index)=>{const y=totalsY+8+index*52;text(label,totalX,y,18,400,muted);text(value,1145,y,19,700,ink,'right');rule(totalX,y+18,1145,y+18)});ctx.fillStyle=blue;ctx.fillRect(totalX,totalsY+112,445,68);text('ยอดรวมทั้งสิ้น',totalX+18,totalsY+155,21,700,'#fff');text(quoteNumber(data.grandTotal),1125,totalsY+155,23,700,'#fff','right');
+  ctx.fillStyle=pale;ctx.fillRect(85,totalsY+220,1060,62);ctx.fillStyle=pink;ctx.fillRect(85,totalsY+220,7,62);text('จำนวนเงินรวม:',115,totalsY+259,18,400,muted);text(thaiBahtText(data.grandTotal),265,totalsY+259,19,700,ink);
+
+  const footerY=1460;rule(85,footerY,1160,footerY,blue,2);drawQuoteImage(ctx,qrImage,85,1490,130,130);text('กดลิงก์หรือสแกน QR เพื่อเพิ่ม LINE',245,1525,20,700,blue);text('โทรศัพท์ / LINE: 096-887-5517',245,1565,18,400,muted);text('Facebook: ขายผ้าพับ ผ้าหลา ผ้าม้วน ราคาส่ง',245,1597,18,400,muted);rule(830,1500,1150,1500,muted,1);text('ผู้เสนอราคา',990,1550,17,400,muted,'center');text('XHX SHOP',990,1586,19,700,ink,'center');text(`วันที่ ${quoteDate(data.today)}`,990,1620,16,400,muted,'center');
+  return canvas;
+}
+
+async function downloadQuotationPdf(data,mobileWindow){
+  if(!window.PDFLib) throw new Error('PDF library unavailable');
+  const [logoImage,qrImage]=await Promise.all([loadQuoteImage('assets/logo.jpg'),loadQuoteImage('assets/line-qr.jpg')]);
+  const canvas=drawQuotePdfCanvas(data,logoImage,qrImage);
+  const pdf=await PDFLib.PDFDocument.create();
+  const jpg=await pdf.embedJpg(canvas.toDataURL('image/jpeg',0.94));
+  const page=pdf.addPage([595.28,841.89]);
+  page.drawImage(jpg,{x:0,y:0,width:595.28,height:841.89});
+  const bytes=await pdf.save();
+  const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+  if(mobileWindow){mobileWindow.location.replace(url)}else{
+    const link=document.createElement('a');link.href=url;link.download=`ใบเสนอราคา-${data.quoteId}.pdf`;document.body.appendChild(link);link.click();link.remove();
+  }
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+
+document.querySelector('#download-quote').addEventListener('click',async event=>{
+  const button=event.currentTarget;
+  const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||window.innerWidth<700;
+  const mobileWindow=isMobile?window.open('','_blank'):null;
+  if(mobileWindow)mobileWindow.document.write('<p style="font:18px sans-serif;padding:24px">กำลังสร้างใบเสนอราคา PDF...</p>');
+  const data=buildQuotation();
+  document.title=`ใบเสนอราคา ${data.quoteId} - ${data.customerName}`;
+  button.disabled=true;button.textContent='กำลังสร้าง PDF...';
+  try{await downloadQuotationPdf(data,mobileWindow)}catch(error){
+    if(mobileWindow)mobileWindow.close();
+    console.error(error);window.print();
+  }finally{button.disabled=false;button.textContent='ดาวน์โหลดใบเสนอราคา PDF'}
 });
 document.querySelector('.menu-button').addEventListener('click',e=>{const links=document.querySelector('.nav-links');links.classList.toggle('open');e.currentTarget.setAttribute('aria-expanded',links.classList.contains('open'))});
 document.querySelectorAll('.nav-links a').forEach(a=>a.addEventListener('click',()=>document.querySelector('.nav-links').classList.remove('open')));
